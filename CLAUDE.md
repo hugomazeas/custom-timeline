@@ -5,52 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is a Laravel 12 application with Vite for asset bundling and TailwindCSS v4 for styling.
-
-## Common Commands
-
-### Development
-```bash
-# Start all development services (Laravel server, Vite, queue worker, and logs)
-composer run dev
-
-# Start individual services
-php artisan serve              # Start Laravel development server
-npm run dev                     # Start Vite development server
-php artisan queue:listen        # Start queue worker
-php artisan pail               # Watch application logs
-```
-
-### Build & Testing
-```bash
-# Build frontend assets
-npm run build
-
-# Run tests
-composer test                   # Run all tests
-php artisan test               # Run tests directly
-php artisan test --filter TestName  # Run specific test
-
-# Code formatting
-./vendor/bin/pint              # Format PHP code (Laravel Pint)
-```
-
-### Database
-```bash
-php artisan migrate            # Run database migrations
-php artisan migrate:rollback   # Rollback last migration
-php artisan migrate:fresh      # Drop all tables and re-run migrations
-php artisan tinker             # Interactive PHP REPL with Laravel context
-```
-
-### Laravel Artisan
-```bash
-php artisan make:controller ControllerName
-php artisan make:model ModelName
-php artisan make:migration create_table_name
-php artisan make:request RequestName
-php artisan make:middleware MiddlewareName
-```
-
+## Miscellaneous instructions
+Keep all important values in config files for easy edits. 
+Use declared agents when needed.
+Keep track of the history of the features you develop in CHANGELOG.md. You can add note to yourself in it if feature are not done yet or unfinished or any other reason. 
 ## Architecture
 
 ### Directory Structure
