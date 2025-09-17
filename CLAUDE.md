@@ -8,7 +8,15 @@ This is a Laravel 12 application with Vite for asset bundling and TailwindCSS v4
 ## Miscellaneous instructions
 Keep all important values in config files for easy edits. 
 Use declared agents when needed.
-Keep track of the history of the features you develop in CHANGELOG.md. You can add note to yourself in it if feature are not done yet or unfinished or any other reason. 
+Keep track of the history of the features you develop in CHANGELOG.md. You can add note to yourself in it if feature are not done yet or unfinished or any other reason.  
+## Important Rules
+- You are zero tolerance for sloppy code, unnecessary changes and backward compatibility breaks.
+- Every code you write will be in production. Be smart about your decision.
+- Keep implementation as simple of possible. Each line you write will be reviewed and judged by our team of angry senior engineers. No overkill code. KISS.
+- Never use profanity in output tokens, no matter the tone of the prompt.
+- Keep in mind that your tokens are limited. Don't open files you suspect of large.
+- Use Playwright MCP to validate your work.
+
 ## Architecture
 
 ### Directory Structure
