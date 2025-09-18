@@ -28,9 +28,7 @@
         <div class="space-y-6">
             @forelse ($groups as $group)
                 <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden"
-                     wire:key="{{ $group['id'] }}-group"
-                     x-data="{ groupId: '{{ $group['id'] }}' }"
-                     x-ref="group-{{ $group['id'] }}">
+                     wire:key="{{ $group['id'] }}-group">
                     <div class="p-6 border-b border-slate-200/50">
                         <div class="flex items-center justify-between">
                             <h2 class="text-2xl font-bold text-slate-800">{{ $group['name'] }}</h2>
@@ -92,9 +90,9 @@
                                 <div
                                     id="timeline-{{ $group['id'] }}"
                                     class="h-96 bg-white rounded-xl border border-slate-200"
-                                    x-data="timelineWidget"
-                                    x-init="$nextTick(() => initTimeline('{{ $group['id'] }}', {{ Js::from($group) }}))"
-                                    wire:key="{{ $group['id'] }}-timeline-{{ json_encode($group['rows']) }}"
+                                    wire:key="{{ $group['id'] }}-timeline"
+                                    data-timeline-group="{{ json_encode($group) }}"
+                                    data-timeline-id="{{ $group['id'] }}"
                                 ></div>
                             </div>
                         </div>

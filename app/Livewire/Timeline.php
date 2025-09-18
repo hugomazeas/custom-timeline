@@ -2,6 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\TimelineGroup;
+use App\Models\TimelineRow;
+use App\Models\Event;
 use Livewire\Component;
 use Livewire\Attributes\On;
 
@@ -23,81 +26,69 @@ class Timeline extends Component
 
     public function createGroup(array $data)
     {
-        $group = [
-            'id' => $this->generateId(),
+        $group = TimelineGroup::create([
             'name' => $data['name'],
-            'rows' => [
-                [
-                    'id' => $this->generateId(),
-                    'name' => 'Row 1',
-                    'events' => []
-                ]
-            ],
-            'created_at' => now()->toISOString()
-        ];
+        ]);
 
-        $this->groups[] = $group;
-        $this->saveData();
+        $row = $group->timelineRows()->create([
+            'name' => 'Row 1',
+        ]);
+
+        $this->loadData();
         $this->showGroupModal = false;
-        $this->dispatch('group-created', $group['id']);
+        $this->dispatch('group-created', $group->id);
     }
 
-    public function createRow(array $data, string $groupId)
+    public function createRow(array $data, int $groupId)
     {
-        $groupIndex = $this->findGroupIndex($groupId);
-        if ($groupIndex === null) return;
+        $group = TimelineGroup::find($groupId);
+        if (!$group) return;
 
-        $newRow = [
-            'id' => $this->generateId(),
+        $group->timelineRows()->create([
             'name' => $data['name'],
-            'events' => []
-        ];
+        ]);
 
-        $this->groups[$groupIndex]['rows'][] = $newRow;
-        $this->saveData();
+        $this->loadData();
         $this->showRowModal = false;
         $this->dispatch('timeline-updated', ['groupId' => $groupId]);
     }
 
-    public function createEvent(array $data, string $groupId, string $rowId)
+    public function createEvent(array $data, int $groupId, int $rowId)
     {
-        $groupIndex = $this->findGroupIndex($groupId);
-        if ($groupIndex === null) return;
+        $row = TimelineRow::find($rowId);
+        if (!$row) return;
 
-        $rowIndex = $this->findRowIndex($groupIndex, $rowId);
-        if ($rowIndex === null) return;
-
-        $event = [
-            'id' => $this->generateId(),
+        $row->events()->create([
             'title' => $data['title'],
-            'type' => $data['type'],
-            'start' => $data['start'],
-            'end' => $data['end'] ?? null,
-            'color' => $data['color'] ?? '#6366f1'
-        ];
+            'start_date' => $data['start'],
+            'end_date' => $data['end'] ?? null,
+            'color' => $data['color'] ?? '#6366f1',
+        ]);
 
-        $this->groups[$groupIndex]['rows'][$rowIndex]['events'][] = $event;
-        $this->saveData();
+        $this->loadData();
         $this->showEventModal = false;
         $this->dispatch('timeline-updated', ['groupId' => $groupId]);
     }
 
-    public function deleteGroup(string $groupId)
+    public function deleteGroup(int $groupId)
     {
-        $this->groups = array_values(array_filter($this->groups, fn($g) => $g['id'] !== $groupId));
-        $this->saveData();
+        $group = TimelineGroup::find($groupId);
+        if ($group) {
+            $group->delete();
+        }
+
+        $this->loadData();
         $this->dispatch('group-deleted', $groupId);
     }
 
-    public function deleteRow(string $groupId, string $rowId)
+    public function deleteRow(int $groupId, int $rowId)
     {
-        $groupIndex = $this->findGroupIndex($groupId);
-        if ($groupIndex === null) return;
+        $row = TimelineRow::find($rowId);
+        if ($row) {
+            $row->delete();
+        }
 
-        $this->groups[$groupIndex]['rows'] = array_values(
-            array_filter($this->groups[$groupIndex]['rows'], fn($r) => $r['id'] !== $rowId)
-        );
-        $this->saveData();
+        $this->loadData();
         $this->dispatch('timeline-updated', ['groupId' => $groupId]);
     }
 
@@ -107,7 +98,7 @@ class Timeline extends Component
         $this->showGroupModal = true;
     }
 
-    public function openEventModal(string $groupId, string $rowId)
+    public function openEventModal(int $groupId, int $rowId)
     {
         $this->currentEvent = [
             'groupId' => $groupId,
@@ -118,7 +109,7 @@ class Timeline extends Component
         $this->showEventModal = true;
     }
 
-    public function openRowModal(string $groupId)
+    public function openRowModal(int $groupId)
     {
         $this->currentRow = ['groupId' => $groupId];
         $this->showRowModal = true;
@@ -134,39 +125,34 @@ class Timeline extends Component
         $this->currentRow = [];
     }
 
-    private function findGroupIndex(string $groupId): ?int
-    {
-        foreach ($this->groups as $index => $group) {
-            if ($group['id'] === $groupId) {
-                return $index;
-            }
-        }
-        return null;
-    }
-
-    private function findRowIndex(int $groupIndex, string $rowId): ?int
-    {
-        foreach ($this->groups[$groupIndex]['rows'] as $index => $row) {
-            if ($row['id'] === $rowId) {
-                return $index;
-            }
-        }
-        return null;
-    }
-
-    private function generateId(): string
-    {
-        return 'id_' . substr(str_shuffle('abcdefghijklmnopqrstuvwxyz0123456789'), 0, 9) . '_' . time();
-    }
-
-    private function saveData(): void
-    {
-        session(['timeline_groups' => $this->groups]);
-    }
-
     private function loadData(): void
     {
-        $this->groups = session('timeline_groups', []);
+        $groups = TimelineGroup::with(['timelineRows.events'])->get();
+
+        $this->groups = $groups->map(function ($group) {
+            return [
+                'id' => $group->id,
+                'name' => $group->name,
+                'created_at' => $group->created_at->toISOString(),
+                'rows' => $group->timelineRows->map(function ($row) {
+                    return [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'events' => $row->events->map(function ($event) {
+                            return [
+                                'id' => $event->id,
+                                'title' => $event->title,
+                                'type' => $event->type,
+                                'start' => $event->start_date->toISOString(),
+                                'end' => $event->end_date?->toISOString(),
+                                'color' => $event->color,
+                                'created_at' => $event->created_at->toISOString()
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray()
+            ];
+        })->toArray();
     }
 
     public function render()
