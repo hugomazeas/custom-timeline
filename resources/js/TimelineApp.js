@@ -380,9 +380,9 @@ export class TimelineApp {
             if (response.ok) {
                 const data = await response.json();
                 // Update local data
-                const group = this.groups.find(g => g.id === groupId);
+                const group = this.groups.find(g => g.id == groupId); // Use loose equality
                 if (group) {
-                    const row = group.rows.find(r => r.id === rowId);
+                    const row = group.rows.find(r => r.id == rowId); // Use loose equality
                     if (row) {
                         row.events.push(data.event);
                         this.updateTimeline(groupId, group);
@@ -418,10 +418,10 @@ export class TimelineApp {
             if (response.ok) {
                 const data = await response.json();
                 // Update local data
-                const group = this.groups.find(g => g.id === groupId);
+                const group = this.groups.find(g => g.id == groupId); // Use loose equality to handle string/number comparison
                 if (group) {
                     group.rows.push(data.row);
-                    this.renderGroups(); // Full re-render to update row list
+                    this.updateTimeline(groupId, group); // Update existing timeline instance
                 }
                 this.hideRowModal();
             } else {
@@ -468,10 +468,10 @@ export class TimelineApp {
 
             if (response.ok) {
                 // Update local data
-                const group = this.groups.find(g => g.id === groupId);
+                const group = this.groups.find(g => g.id == groupId); // Use loose equality
                 if (group) {
-                    group.rows = group.rows.filter(r => r.id !== rowId);
-                    this.renderGroups(); // Full re-render to update row list
+                    group.rows = group.rows.filter(r => r.id != rowId); // Use loose equality
+                    this.updateTimeline(groupId, group); // Update existing timeline instance
                 }
             } else {
                 console.error('Failed to delete row');

@@ -2,38 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TimelineGroup;
+use App\Models\TimelineRow;
+use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class TimelineController extends Controller
 {
-    // Simple in-memory storage for demo purposes
-    private function getStorageFile(): string
-    {
-        return storage_path('app/timeline_data.json');
-    }
-
-    private function loadData(): array
-    {
-        $file = $this->getStorageFile();
-        if (!file_exists($file)) {
-            return ['groups' => []];
-        }
-
-        $data = json_decode(file_get_contents($file), true);
-        return $data ?: ['groups' => []];
-    }
-
-    private function saveData(array $data): void
-    {
-        $file = $this->getStorageFile();
-        file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
-    }
-
     public function getGroups()
     {
-        $data = $this->loadData();
-        return response()->json(['groups' => $data['groups']]);
+        $groups = TimelineGroup::with(['timelineRows.events'])->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id' => $group->id,
+                'name' => $group->name,
+                'created_at' => $group->created_at->toISOString(),
+                'rows' => $group->timelineRows->map(function ($row) {
+                    return [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'events' => $row->events->map(function ($event) {
+                            return [
+                                'id' => $event->id,
+                                'title' => $event->title,
+                                'type' => $event->type,
+                                'start' => $event->start_date->toISOString(),
+                                'end' => $event->end_date?->toISOString(),
+                                'color' => $event->color,
+                                'created_at' => $event->created_at->toISOString()
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray()
+            ];
+        });
+
+        return response()->json(['groups' => $formattedGroups]);
     }
 
     public function createGroup(Request $request)
@@ -42,33 +47,39 @@ class TimelineController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $data = $this->loadData();
-
-        $group = [
-            'id' => 'id_' . Str::random(10) . '_' . time(),
+        $group = TimelineGroup::create([
             'name' => $request->input('name'),
+        ]);
+
+        $row = $group->timelineRows()->create([
+            'name' => 'Row 1',
+        ]);
+
+        $formattedGroup = [
+            'id' => $group->id,
+            'name' => $group->name,
+            'created_at' => $group->created_at->toISOString(),
             'rows' => [
                 [
-                    'id' => 'id_' . Str::random(10) . '_' . time(),
-                    'name' => 'Row 1',
+                    'id' => $row->id,
+                    'name' => $row->name,
                     'events' => []
                 ]
-            ],
-            'created_at' => now()->toISOString()
+            ]
         ];
 
-        $data['groups'][] = $group;
-        $this->saveData($data);
-
-        return response()->json(['group' => $group], 201);
+        return response()->json(['group' => $formattedGroup], 201);
     }
 
     public function deleteGroup(string $id)
     {
-        $data = $this->loadData();
-        $data['groups'] = array_filter($data['groups'], fn($g) => $g['id'] !== $id);
-        $data['groups'] = array_values($data['groups']); // Re-index array
-        $this->saveData($data);
+        $group = TimelineGroup::find($id);
+
+        if (!$group) {
+            return response()->json(['error' => 'Group not found'], 404);
+        }
+
+        $group->delete();
 
         return response()->json(['success' => true]);
     }
@@ -76,119 +87,89 @@ class TimelineController extends Controller
     public function createRow(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|string',
+            'group_id' => 'required|integer',
             'name' => 'required|string|max:255',
         ]);
 
-        $data = $this->loadData();
-        $groupIndex = null;
+        $group = TimelineGroup::find($request->input('group_id'));
 
-        foreach ($data['groups'] as $index => $group) {
-            if ($group['id'] === $request->input('group_id')) {
-                $groupIndex = $index;
-                break;
-            }
-        }
-
-        if ($groupIndex === null) {
+        if (!$group) {
             return response()->json(['error' => 'Group not found'], 404);
         }
 
-        $row = [
-            'id' => 'id_' . Str::random(10) . '_' . time(),
+        $row = $group->timelineRows()->create([
             'name' => $request->input('name'),
+        ]);
+
+        $formattedRow = [
+            'id' => $row->id,
+            'name' => $row->name,
             'events' => []
         ];
 
-        $data['groups'][$groupIndex]['rows'][] = $row;
-        $this->saveData($data);
-
-        return response()->json(['row' => $row], 201);
+        return response()->json(['row' => $formattedRow], 201);
     }
 
     public function deleteRow(string $id)
     {
-        $data = $this->loadData();
+        $row = TimelineRow::find($id);
 
-        foreach ($data['groups'] as $groupIndex => $group) {
-            foreach ($group['rows'] as $rowIndex => $row) {
-                if ($row['id'] === $id) {
-                    unset($data['groups'][$groupIndex]['rows'][$rowIndex]);
-                    $data['groups'][$groupIndex]['rows'] = array_values($data['groups'][$groupIndex]['rows']);
-                    $this->saveData($data);
-                    return response()->json(['success' => true]);
-                }
-            }
+        if (!$row) {
+            return response()->json(['error' => 'Row not found'], 404);
         }
 
-        return response()->json(['error' => 'Row not found'], 404);
+        $row->delete();
+
+        return response()->json(['success' => true]);
     }
 
     public function createEvent(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|string',
-            'row_id' => 'required|string',
+            'group_id' => 'required|integer',
+            'row_id' => 'required|integer',
             'title' => 'required|string|max:255',
-            'type' => 'required|in:punctual,timespan',
             'start' => 'required|date',
-            'end' => 'nullable|date|after:start',
+            'end' => 'nullable|date',
             'color' => 'required|string'
         ]);
 
-        $data = $this->loadData();
-        $groupIndex = null;
-        $rowIndex = null;
+        $row = TimelineRow::find($request->input('row_id'));
 
-        foreach ($data['groups'] as $gIndex => $group) {
-            if ($group['id'] === $request->input('group_id')) {
-                $groupIndex = $gIndex;
-                foreach ($group['rows'] as $rIndex => $row) {
-                    if ($row['id'] === $request->input('row_id')) {
-                        $rowIndex = $rIndex;
-                        break 2;
-                    }
-                }
-            }
+        if (!$row) {
+            return response()->json(['error' => 'Row not found'], 404);
         }
 
-        if ($groupIndex === null || $rowIndex === null) {
-            return response()->json(['error' => 'Group or row not found'], 404);
-        }
-
-        $event = [
-            'id' => 'id_' . Str::random(10) . '_' . time(),
+        $event = $row->events()->create([
             'title' => $request->input('title'),
-            'type' => $request->input('type'),
-            'start' => $request->input('start'),
-            'end' => $request->input('end'),
+            'start_date' => $request->input('start'),
+            'end_date' => $request->input('end'),
             'color' => $request->input('color'),
-            'created_at' => now()->toISOString()
+        ]);
+
+        $formattedEvent = [
+            'id' => $event->id,
+            'title' => $event->title,
+            'type' => $event->type,
+            'start' => $event->start_date->toISOString(),
+            'end' => $event->end_date?->toISOString(),
+            'color' => $event->color,
+            'created_at' => $event->created_at->toISOString()
         ];
 
-        $data['groups'][$groupIndex]['rows'][$rowIndex]['events'][] = $event;
-        $this->saveData($data);
-
-        return response()->json(['event' => $event], 201);
+        return response()->json(['event' => $formattedEvent], 201);
     }
 
     public function deleteEvent(string $id)
     {
-        $data = $this->loadData();
+        $event = Event::find($id);
 
-        foreach ($data['groups'] as $groupIndex => $group) {
-            foreach ($group['rows'] as $rowIndex => $row) {
-                foreach ($row['events'] as $eventIndex => $event) {
-                    if ($event['id'] === $id) {
-                        unset($data['groups'][$groupIndex]['rows'][$rowIndex]['events'][$eventIndex]);
-                        $data['groups'][$groupIndex]['rows'][$rowIndex]['events'] = array_values($data['groups'][$groupIndex]['rows'][$rowIndex]['events']);
-                        $this->saveData($data);
-                        return response()->json(['success' => true]);
-                    }
-                }
-            }
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
         }
 
-        return response()->json(['error' => 'Event not found'], 404);
+        $event->delete();
+
+        return response()->json(['success' => true]);
     }
 }
