@@ -349,8 +349,8 @@ export class TimelineApp {
     }
 
     async createEvent() {
-        const groupId = document.getElementById('eventGroupId').value;
-        const rowId = document.getElementById('eventRowId').value;
+        const groupId = parseInt(document.getElementById('eventGroupId').value);
+        const rowId = parseInt(document.getElementById('eventRowId').value);
         const title = document.getElementById('eventTitle').value.trim();
         const type = document.querySelector('input[name="eventType"]:checked').value;
         const start = document.getElementById('eventStart').value;
@@ -379,10 +379,9 @@ export class TimelineApp {
 
             if (response.ok) {
                 const data = await response.json();
-                // Update local data
-                const group = this.groups.find(g => g.id == groupId); // Use loose equality
+                const group = this.groups.find(g => g.id === groupId);
                 if (group) {
-                    const row = group.rows.find(r => r.id == rowId); // Use loose equality
+                    const row = group.rows.find(r => r.id === rowId);
                     if (row) {
                         row.events.push(data.event);
                         this.updateTimeline(groupId, group);
@@ -398,7 +397,7 @@ export class TimelineApp {
     }
 
     async createRow() {
-        const groupId = document.getElementById('rowGroupId').value;
+        const groupId = parseInt(document.getElementById('rowGroupId').value);
         const name = document.getElementById('rowName').value.trim();
         if (!name) return;
 
@@ -417,11 +416,10 @@ export class TimelineApp {
 
             if (response.ok) {
                 const data = await response.json();
-                // Update local data
-                const group = this.groups.find(g => g.id == groupId); // Use loose equality to handle string/number comparison
+                const group = this.groups.find(g => g.id === groupId);
                 if (group) {
                     group.rows.push(data.row);
-                    this.updateTimeline(groupId, group); // Update existing timeline instance
+                    this.renderGroups();
                 }
                 this.hideRowModal();
             } else {
@@ -433,6 +431,7 @@ export class TimelineApp {
     }
 
     async deleteGroup(groupId) {
+        groupId = parseInt(groupId);
         if (!confirm('Are you sure you want to delete this timeline group?')) return;
 
         try {
@@ -456,6 +455,8 @@ export class TimelineApp {
     }
 
     async deleteRow(groupId, rowId) {
+        groupId = parseInt(groupId);
+        rowId = parseInt(rowId);
         if (!confirm('Are you sure you want to delete this row?')) return;
 
         try {
@@ -467,11 +468,10 @@ export class TimelineApp {
             });
 
             if (response.ok) {
-                // Update local data
-                const group = this.groups.find(g => g.id == groupId); // Use loose equality
+                const group = this.groups.find(g => g.id === groupId);
                 if (group) {
-                    group.rows = group.rows.filter(r => r.id != rowId); // Use loose equality
-                    this.updateTimeline(groupId, group); // Update existing timeline instance
+                    group.rows = group.rows.filter(r => r.id !== rowId);
+                    this.renderGroups();
                 }
             } else {
                 console.error('Failed to delete row');
