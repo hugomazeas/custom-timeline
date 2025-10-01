@@ -23,7 +23,7 @@
 
     @livewireStyles
 </head>
-<body class="font-sans antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+<body class="font-sans antialiased bg-[#1a1a1a] min-h-screen text-gray-400">
     <div id="app">
         @yield('content')
         {{ $slot ?? '' }}

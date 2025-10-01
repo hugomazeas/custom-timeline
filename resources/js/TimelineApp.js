@@ -103,40 +103,40 @@ export class TimelineApp {
 
     createGroupElement(group) {
         const div = document.createElement('div');
-        div.className = 'bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden';
+        div.className = 'bg-[#2a2a2a] rounded-lg overflow-hidden';
         div.innerHTML = `
-            <div class="p-6 border-b border-slate-200/50">
+            <div class="p-5 border-b border-gray-800">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-slate-800">${group.name}</h2>
-                    <div class="flex items-center space-x-3">
-                        <button onclick="timelineApp.showRowModal('${group.id}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium py-2 px-4 rounded-xl transition-all duration-200 flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h2 class="text-xl font-medium text-gray-300">${group.name}</h2>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="timelineApp.showRowModal('${group.id}')" class="bg-[#323232] hover:bg-[#3a3a3a] text-gray-400 hover:text-[#e2b714] font-medium py-2 px-3 rounded transition-colors duration-200 flex items-center space-x-1.5 text-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span>Add Row</span>
+                            <span>add row</span>
                         </button>
-                        <button onclick="timelineApp.deleteGroup('${group.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-xl transition-all duration-200">
-                            Delete Group
+                        <button onclick="timelineApp.deleteGroup('${group.id}')" class="bg-[#323232] hover:bg-[#3a3a3a] text-gray-400 hover:text-red-500 font-medium py-2 px-3 rounded transition-colors duration-200 text-sm">
+                            delete
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="p-6">
-                <div class="grid grid-cols-12 gap-4 mb-4">
+            <div class="p-5">
+                <div class="grid grid-cols-12 gap-6">
                     <div class="col-span-3">
-                        <h3 class="text-sm font-semibold text-slate-600 mb-3">Timeline Rows</h3>
-                        <div class="space-y-2" id="rows-${group.id}">
+                        <h3 class="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wider">rows</h3>
+                        <div class="space-y-1.5" id="rows-${group.id}">
                             ${group.rows.map(row => `
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                                    <span class="font-medium text-slate-700">${row.name}</span>
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="timelineApp.showEventModal('${group.id}', '${row.id}')" class="text-indigo-600 hover:text-indigo-800 p-1 rounded-lg hover:bg-indigo-50 transition-all duration-200" title="Add Event">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex items-center justify-between p-2.5 bg-[#323232] rounded hover:bg-[#3a3a3a] transition-colors duration-200">
+                                    <span class="font-medium text-gray-400 text-sm">${row.name}</span>
+                                    <div class="flex items-center space-x-1">
+                                        <button onclick="timelineApp.showEventModal('${group.id}', '${row.id}')" class="text-gray-500 hover:text-[#e2b714] p-1 rounded transition-colors duration-200" title="Add Event">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                             </svg>
                                         </button>
-                                        <button onclick="timelineApp.deleteRow('${group.id}', '${row.id}')" class="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-50 transition-all duration-200" title="Delete Row">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <button onclick="timelineApp.deleteRow('${group.id}', '${row.id}')" class="text-gray-500 hover:text-red-500 p-1 rounded transition-colors duration-200" title="Delete Row">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
                                         </button>
@@ -146,7 +146,7 @@ export class TimelineApp {
                         </div>
                     </div>
                     <div class="col-span-9">
-                        <div id="timeline-${group.id}" class="h-96 bg-white rounded-xl border border-slate-200"></div>
+                        <div id="timeline-${group.id}" class="h-96 bg-[#1a1a1a] rounded border border-gray-800"></div>
                     </div>
                 </div>
             </div>
