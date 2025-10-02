@@ -14,100 +14,109 @@
 .vis-timeline {
     border: none !important;
     font-family: 'Inter', sans-serif !important;
+    background: #1a1a1a !important;
 }
 
 .vis-item {
-    border-radius: 8px !important;
+    border-radius: 4px !important;
     border: none !important;
-    font-weight: 500 !important;
-    font-size: 14px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    font-weight: 400 !important;
+    font-size: 13px !important;
+    color: #ffffff !important;
 }
 
 .vis-item.vis-point {
     border-radius: 50% !important;
-    width: 12px !important;
-    height: 12px !important;
+    width: 10px !important;
+    height: 10px !important;
 }
 
 .vis-item.vis-selected {
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
-    transform: scale(1.02) !important;
+    box-shadow: 0 0 0 2px #e2b714 !important;
 }
 
 .vis-labelset .vis-label {
-    color: #475569 !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 8px !important;
-    margin: 2px 0 !important;
+    color: #9ca3af !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    background: #2a2a2a !important;
+    border: none !important;
+    border-right: 1px solid #3a3a3a !important;
+    margin: 0 !important;
 }
 
 .vis-time-axis .vis-text {
-    color: #64748b !important;
-    font-weight: 500 !important;
+    color: #6b7280 !important;
+    font-weight: 400 !important;
 }
 
 .vis-time-axis .vis-grid.vis-minor {
-    border-color: #f1f5f9 !important;
+    border-color: #2a2a2a !important;
 }
 
 .vis-time-axis .vis-grid.vis-major {
-    border-color: #e2e8f0 !important;
+    border-color: #3a3a3a !important;
 }
 
 .vis-current-time {
-    background-color: #ef4444 !important;
+    background-color: #e2b714 !important;
     width: 2px !important;
 }
 
-/* Custom scrollbars for better aesthetics */
+.vis-panel {
+    border-color: #3a3a3a !important;
+}
+
+/* Custom scrollbars */
 .vis-timeline::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 .vis-timeline::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
+    background: #1a1a1a;
 }
 
 .vis-timeline::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #3a3a3a;
     border-radius: 4px;
 }
 
 .vis-timeline::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #4a4a4a;
 }
 
-/* Custom animations */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+input[type="color"] {
+    cursor: pointer;
 }
 
-.animate-slide-in-up {
-    animation: slideInUp 0.3s ease-out;
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
+}
+
+#comparisonTimeline .vis-panel {
+    border: none !important;
+}
+
+#comparisonTimeline .vis-timeline {
+    border: none !important;
 }
