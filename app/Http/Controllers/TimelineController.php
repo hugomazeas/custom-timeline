@@ -37,11 +37,7 @@ class TimelineController extends Controller
 
     public function deleteGroup(string $id)
     {
-        $deleted = $this->timelineService->deleteGroup((int) $id);
-
-        if (! $deleted) {
-            return response()->json(['error' => 'Group not found'], 404);
-        }
+        $this->timelineService->deleteGroup((int) $id);
 
         return response()->json(['success' => true]);
     }
@@ -55,10 +51,6 @@ class TimelineController extends Controller
             $validated['name']
         );
 
-        if (! $row) {
-            return response()->json(['error' => 'Group not found'], 404);
-        }
-
         return response()->json([
             'row' => [
                 'id' => $row->id,
@@ -70,11 +62,7 @@ class TimelineController extends Controller
 
     public function deleteRow(string $id)
     {
-        $deleted = $this->timelineService->deleteRow((int) $id);
-
-        if (! $deleted) {
-            return response()->json(['error' => 'Row not found'], 404);
-        }
+        $this->timelineService->deleteRow((int) $id);
 
         return response()->json(['success' => true]);
     }
@@ -83,14 +71,10 @@ class TimelineController extends Controller
     {
         $validated = $request->validated();
 
-        $row = $this->timelineService->moveRow(
+        $this->timelineService->moveRow(
             (int) $id,
             $validated['target_group_id']
         );
-
-        if (! $row) {
-            return response()->json(['error' => 'Row or target group not found'], 404);
-        }
 
         return response()->json(['success' => true]);
     }
@@ -104,10 +88,6 @@ class TimelineController extends Controller
             $validated
         );
 
-        if (! $event) {
-            return response()->json(['error' => 'Row not found'], 404);
-        }
-
         return response()->json([
             'event' => new EventResource($event),
         ], 201);
@@ -119,10 +99,6 @@ class TimelineController extends Controller
 
         $event = $this->timelineService->updateEvent((int) $id, $validated);
 
-        if (! $event) {
-            return response()->json(['error' => 'Event not found'], 404);
-        }
-
         return response()->json([
             'event' => new EventResource($event),
         ]);
@@ -130,11 +106,7 @@ class TimelineController extends Controller
 
     public function deleteEvent(string $id)
     {
-        $deleted = $this->timelineService->deleteEvent((int) $id);
-
-        if (! $deleted) {
-            return response()->json(['error' => 'Event not found'], 404);
-        }
+        $this->timelineService->deleteEvent((int) $id);
 
         return response()->json(['success' => true]);
     }

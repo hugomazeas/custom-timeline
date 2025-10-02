@@ -12,6 +12,7 @@ Keep track of the history of the features you develop in CHANGELOG.md. You can a
 
 ## Important Rules
 - Stylistic vision: Calm UI. 
+- Use methods that support failure like instead of "find()" use "findOrFail()"
 - No fat controllers or business logic in models (use service layer)
 - Never call `env()` directly, always use `config()`
 - Zero tolerance for sloppy code, unnecessary changes, or backward compatibility breaks

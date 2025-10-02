@@ -17,8 +17,8 @@ class UpdateEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'required|integer',
-            'row_id' => 'required|integer',
+            'group_id' => 'required|integer|exists:timeline_groups,id',
+            'row_id' => 'required|integer|exists:timeline_rows,id',
             'title' => 'required|string|max:255',
             'start' => 'required|date',
             'end' => 'nullable|date',

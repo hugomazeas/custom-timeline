@@ -23,69 +23,41 @@ class TimelineService
         return $group->load('timelineRows.events');
     }
 
-    public function deleteGroup(int $groupId): bool
+    public function deleteGroup(int $groupId): void
     {
-        $group = TimelineGroup::find($groupId);
-
-        if (! $group) {
-            return false;
-        }
+        $group = TimelineGroup::findOrFail($groupId);
 
         $group->delete();
-
-        return true;
     }
 
-    public function createRow(int $groupId, string $name): ?TimelineRow
+    public function createRow(int $groupId, string $name): TimelineRow
     {
-        $group = TimelineGroup::find($groupId);
-
-        if (! $group) {
-            return null;
-        }
+        $group = TimelineGroup::findOrFail($groupId);
 
         return $group->timelineRows()->create(['name' => $name]);
     }
 
-    public function deleteRow(int $rowId): bool
+    public function deleteRow(int $rowId): void
     {
-        $row = TimelineRow::find($rowId);
-
-        if (! $row) {
-            return false;
-        }
+        $row = TimelineRow::findOrFail($rowId);
 
         $row->delete();
-
-        return true;
     }
 
-    public function moveRow(int $rowId, int $targetGroupId): ?TimelineRow
+    public function moveRow(int $rowId, int $targetGroupId): TimelineRow
     {
-        $row = TimelineRow::find($rowId);
+        $row = TimelineRow::findOrFail($rowId);
 
-        if (! $row) {
-            return null;
-        }
-
-        $targetGroup = TimelineGroup::find($targetGroupId);
-
-        if (! $targetGroup) {
-            return null;
-        }
+        TimelineGroup::findOrFail($targetGroupId);
 
         $row->update(['timeline_group_id' => $targetGroupId]);
 
         return $row->fresh();
     }
 
-    public function createEvent(int $rowId, array $eventData): ?Event
+    public function createEvent(int $rowId, array $eventData): Event
     {
-        $row = TimelineRow::find($rowId);
-
-        if (! $row) {
-            return null;
-        }
+        $row = TimelineRow::findOrFail($rowId);
 
         return $row->events()->create([
             'title' => $eventData['title'],
@@ -98,13 +70,9 @@ class TimelineService
         ]);
     }
 
-    public function updateEvent(int $eventId, array $eventData): ?Event
+    public function updateEvent(int $eventId, array $eventData): Event
     {
-        $event = Event::find($eventId);
-
-        if (! $event) {
-            return null;
-        }
+        $event = Event::findOrFail($eventId);
 
         $event->update([
             'title' => $eventData['title'],
@@ -119,16 +87,10 @@ class TimelineService
         return $event->fresh();
     }
 
-    public function deleteEvent(int $eventId): bool
+    public function deleteEvent(int $eventId): void
     {
-        $event = Event::find($eventId);
-
-        if (! $event) {
-            return false;
-        }
+        $event = Event::findOrFail($eventId);
 
         $event->delete();
-
-        return true;
     }
 }
