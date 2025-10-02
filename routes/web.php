@@ -17,5 +17,6 @@ Route::prefix('api')->group(function () {
     Route::delete('/timeline-rows/{id}', [TimelineController::class, 'deleteRow']);
 
     Route::post('/timeline-events', [TimelineController::class, 'createEvent']);
+    Route::put('/timeline-events/{id}', [TimelineController::class, 'updateEvent']);
     Route::delete('/timeline-events/{id}', [TimelineController::class, 'deleteEvent']);
 });

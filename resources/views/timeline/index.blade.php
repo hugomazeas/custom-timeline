@@ -3,13 +3,13 @@
 @section('content')
 <div class="min-h-screen p-8">
     <!-- Header Section -->
-    <div class="max-w-7xl mx-auto mb-12">
+    <div class="mx-24 mb-12">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-medium text-[#e2b714] mb-2">
+                <h1 class="text-3xl font-medium text-[#e2b714] mb-1">
                     timeline
                 </h1>
-                <p class="text-gray-500 text-sm">organize your events</p>
+                <p class="text-gray-400 text-lg font-light">Time is a river, not a grid</p>
             </div>
             <button
                 id="createGroupBtn"
@@ -24,7 +24,7 @@
     </div>
 
     <!-- Timeline Groups Container -->
-    <div class="max-w-7xl mx-auto">
+    <div class="mx-24">
         <div id="timelineGroups" class="space-y-8">
             <!-- Timeline groups will be dynamically inserted here -->
         </div>
@@ -86,10 +86,11 @@
 <!-- Event Creation Modal -->
 <div id="eventModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
     <div class="bg-[#2a2a2a] rounded-lg max-w-lg w-full p-6 border border-gray-800">
-        <h3 class="text-xl font-medium text-gray-300 mb-5">add event</h3>
+        <h3 class="text-xl font-medium text-gray-300 mb-5" id="eventModalTitle">add event</h3>
         <form id="eventForm">
             <input type="hidden" id="eventGroupId">
             <input type="hidden" id="eventRowId">
+            <input type="hidden" id="eventId">
 
             <div class="mb-4">
                 <label for="eventTitle" class="block text-sm font-medium text-gray-500 mb-2">event title</label>
@@ -138,7 +139,7 @@
                 >
             </div>
 
-            <div class="mb-5">
+            <div class="mb-4">
                 <label for="eventColor" class="block text-sm font-medium text-gray-500 mb-2">color</label>
                 <div class="flex space-x-2">
                     <input type="color" id="eventColor" name="eventColor" value="#6366f1" class="w-12 h-10 border border-gray-700 rounded bg-[#1a1a1a] cursor-pointer">
@@ -149,6 +150,35 @@
                         class="flex-1 px-4 py-2.5 border border-gray-700 rounded bg-[#1a1a1a] focus:outline-none focus:border-[#e2b714] transition-colors duration-200 text-gray-300"
                     >
                 </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="eventIsDeadline" name="eventIsDeadline" class="w-4 h-4 text-[#e2b714] bg-[#1a1a1a] border-gray-700 rounded focus:ring-[#e2b714] focus:ring-offset-0">
+                    <span class="ml-2 text-sm text-gray-400">mark as deadline</span>
+                </label>
+            </div>
+
+            <div class="mb-4">
+                <label for="eventNotes" class="block text-sm font-medium text-gray-500 mb-2">notes</label>
+                <textarea
+                    id="eventNotes"
+                    name="eventNotes"
+                    rows="3"
+                    placeholder="additional details about this event..."
+                    class="w-full px-4 py-2.5 border border-gray-700 rounded bg-[#1a1a1a] focus:outline-none focus:border-[#e2b714] transition-colors duration-200 text-gray-300 placeholder-gray-600 resize-none"
+                ></textarea>
+            </div>
+
+            <div class="mb-5">
+                <label for="eventLinks" class="block text-sm font-medium text-gray-500 mb-2">links</label>
+                <textarea
+                    id="eventLinks"
+                    name="eventLinks"
+                    rows="2"
+                    placeholder="https://example.com (one per line)"
+                    class="w-full px-4 py-2.5 border border-gray-700 rounded bg-[#1a1a1a] focus:outline-none focus:border-[#e2b714] transition-colors duration-200 text-gray-300 placeholder-gray-600 resize-none"
+                ></textarea>
             </div>
 
             <div class="flex space-x-2">
@@ -205,6 +235,49 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Compare Row Selection Modal -->
+<div id="compareSelectionModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+    <div class="bg-[#2a2a2a] rounded-lg max-w-lg w-full p-6 border border-gray-800">
+        <h3 class="text-xl font-medium text-gray-300 mb-2">compare rows</h3>
+        <p class="text-sm text-gray-500 mb-5">select a row to compare with <span id="sourceRowName" class="text-[#e2b714]"></span></p>
+
+        <div class="mb-5 max-h-[400px] overflow-y-auto">
+            <div id="rowSelectionList"></div>
+        </div>
+
+        <div class="flex space-x-2">
+            <button
+                type="button"
+                id="cancelCompareSelectionBtn"
+                class="flex-1 bg-[#323232] hover:bg-[#3a3a3a] text-gray-400 font-medium py-2.5 px-4 rounded transition-colors duration-200"
+            >
+                cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Timeline Modal -->
+<div id="comparisonModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+    <div class="bg-[#1a1a1a] rounded-lg w-[95%] h-[90%] p-6 border border-gray-800 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-medium text-gray-300">row comparison</h3>
+            <button
+                id="closeComparisonBtn"
+                class="text-gray-500 hover:text-gray-300 p-2 rounded transition-colors duration-200"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-hidden flex items-center justify-center">
+            <div id="comparisonTimeline" class="w-full h-[250px] bg-[#1a1a1a]"></div>
+        </div>
     </div>
 </div>
 @endsection

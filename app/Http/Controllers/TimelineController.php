@@ -30,6 +30,9 @@ class TimelineController extends Controller
                                 'start' => $event->start_date->toISOString(),
                                 'end' => $event->end_date?->toISOString(),
                                 'color' => $event->color,
+                                'is_deadline' => $event->is_deadline,
+                                'notes' => $event->notes,
+                                'links' => $event->links,
                                 'created_at' => $event->created_at->toISOString()
                             ];
                         })->toArray()
@@ -131,7 +134,10 @@ class TimelineController extends Controller
             'title' => 'required|string|max:255',
             'start' => 'required|date',
             'end' => 'nullable|date',
-            'color' => 'required|string'
+            'color' => 'required|string',
+            'is_deadline' => 'nullable|boolean',
+            'notes' => 'nullable|string',
+            'links' => 'nullable|string'
         ]);
 
         $row = TimelineRow::find($request->input('row_id'));
@@ -145,6 +151,9 @@ class TimelineController extends Controller
             'start_date' => $request->input('start'),
             'end_date' => $request->input('end'),
             'color' => $request->input('color'),
+            'is_deadline' => $request->input('is_deadline', false),
+            'notes' => $request->input('notes'),
+            'links' => $request->input('links'),
         ]);
 
         $formattedEvent = [
@@ -154,10 +163,59 @@ class TimelineController extends Controller
             'start' => $event->start_date->toISOString(),
             'end' => $event->end_date?->toISOString(),
             'color' => $event->color,
+            'is_deadline' => $event->is_deadline,
+            'notes' => $event->notes,
+            'links' => $event->links,
             'created_at' => $event->created_at->toISOString()
         ];
 
         return response()->json(['event' => $formattedEvent], 201);
+    }
+
+    public function updateEvent(Request $request, string $id)
+    {
+        $request->validate([
+            'group_id' => 'required|integer',
+            'row_id' => 'required|integer',
+            'title' => 'required|string|max:255',
+            'start' => 'required|date',
+            'end' => 'nullable|date',
+            'color' => 'required|string',
+            'is_deadline' => 'nullable|boolean',
+            'notes' => 'nullable|string',
+            'links' => 'nullable|string'
+        ]);
+
+        $event = Event::find($id);
+
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+
+        $event->update([
+            'title' => $request->input('title'),
+            'start_date' => $request->input('start'),
+            'end_date' => $request->input('end'),
+            'color' => $request->input('color'),
+            'is_deadline' => $request->input('is_deadline', false),
+            'notes' => $request->input('notes'),
+            'links' => $request->input('links'),
+        ]);
+
+        $formattedEvent = [
+            'id' => $event->id,
+            'title' => $event->title,
+            'type' => $event->type,
+            'start' => $event->start_date->toISOString(),
+            'end' => $event->end_date?->toISOString(),
+            'color' => $event->color,
+            'is_deadline' => $event->is_deadline,
+            'notes' => $event->notes,
+            'links' => $event->links,
+            'created_at' => $event->created_at->toISOString()
+        ];
+
+        return response()->json(['event' => $formattedEvent]);
     }
 
     public function deleteEvent(string $id)

@@ -14,6 +14,9 @@ class Event extends Model
         'start_date',
         'end_date',
         'color',
+        'is_deadline',
+        'notes',
+        'links',
     ];
 
     protected function casts(): array
@@ -21,6 +24,7 @@ class Event extends Model
         return [
             'start_date' => 'datetime',
             'end_date' => 'datetime',
+            'is_deadline' => 'boolean',
         ];
     }
 
