@@ -7,6 +7,7 @@ export class TimelineApp {
         this.contextMenuOpen = null;
         this.comparisonTimeline = null;
         this.sourceRowForComparison = null;
+        this.rowToMove = null;
         this.init();
     }
 
@@ -67,6 +68,9 @@ export class TimelineApp {
         // Compare modals
         addListener('cancelCompareSelectionBtn', 'click', () => this.hideCompareSelectionModal());
         addListener('closeComparisonBtn', 'click', () => this.hideComparisonModal());
+
+        // Move row modal
+        addListener('cancelMoveRowBtn', 'click', () => this.hideMoveRowModal());
 
         // Event type radio buttons
         const eventTypeRadios = document.querySelectorAll('input[name="eventType"]');
@@ -720,6 +724,12 @@ export class TimelineApp {
                 </svg>
                 <span>edit row</span>
             </button>
+            <button class="context-menu-item w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-[#323232] hover:text-[#e2b714] transition-colors duration-200 flex items-center gap-3" onclick="timelineApp.showMoveRowModal('${groupId}', '${rowId}', '${rowName}'); timelineApp.closeContextMenu();">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                <span>move to group</span>
+            </button>
             <button class="context-menu-item w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-[#323232] hover:text-red-500 transition-colors duration-200 flex items-center gap-3" onclick="timelineApp.deleteRow('${groupId}', '${rowId}'); timelineApp.closeContextMenu();">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -934,6 +944,72 @@ export class TimelineApp {
         if (this.comparisonTimeline) {
             this.comparisonTimeline.destroy();
             this.comparisonTimeline = null;
+        }
+    }
+
+    showMoveRowModal(groupId, rowId, rowName) {
+        groupId = parseInt(groupId);
+        rowId = parseInt(rowId);
+
+        this.rowToMove = { groupId, rowId, rowName };
+
+        document.getElementById('moveRowName').textContent = rowName;
+
+        const listContainer = document.getElementById('groupSelectionList');
+        listContainer.innerHTML = '';
+
+        this.groups.filter(g => g.id !== groupId).forEach(group => {
+            const groupButton = document.createElement('button');
+            groupButton.className = 'w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-[#323232] hover:text-[#e2b714] transition-colors duration-200 rounded flex items-center gap-2';
+            groupButton.innerHTML = `
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span>${group.name}</span>
+            `;
+            groupButton.onclick = () => this.moveRow(rowId, group.id);
+            listContainer.appendChild(groupButton);
+        });
+
+        if (this.groups.filter(g => g.id !== groupId).length === 0) {
+            listContainer.innerHTML = '<div class="text-center py-8 text-gray-600 text-sm">no other groups available</div>';
+        }
+
+        document.getElementById('moveRowModal').classList.remove('hidden');
+        document.getElementById('moveRowModal').classList.add('flex');
+    }
+
+    hideMoveRowModal() {
+        document.getElementById('moveRowModal').classList.add('hidden');
+        document.getElementById('moveRowModal').classList.remove('flex');
+        this.rowToMove = null;
+    }
+
+    async moveRow(rowId, targetGroupId) {
+        rowId = parseInt(rowId);
+        targetGroupId = parseInt(targetGroupId);
+
+        this.hideMoveRowModal();
+
+        try {
+            const response = await fetch(`/api/timeline-rows/${rowId}/move`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    target_group_id: targetGroupId
+                })
+            });
+
+            if (response.ok) {
+                await this.loadGroups();
+            } else {
+                console.error('Failed to move row');
+            }
+        } catch (error) {
+            console.error('Error moving row:', error);
         }
     }
 }

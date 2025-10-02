@@ -238,6 +238,28 @@
     </div>
 </div>
 
+<!-- Move Row Modal -->
+<div id="moveRowModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+    <div class="bg-[#2a2a2a] rounded-lg max-w-lg w-full p-6 border border-gray-800">
+        <h3 class="text-xl font-medium text-gray-300 mb-2">move row to group</h3>
+        <p class="text-sm text-gray-500 mb-5">select a group to move <span id="moveRowName" class="text-[#e2b714]"></span> to</p>
+
+        <div class="mb-5 max-h-[400px] overflow-y-auto">
+            <div id="groupSelectionList"></div>
+        </div>
+
+        <div class="flex space-x-2">
+            <button
+                type="button"
+                id="cancelMoveRowBtn"
+                class="flex-1 bg-[#323232] hover:bg-[#3a3a3a] text-gray-400 font-medium py-2.5 px-4 rounded transition-colors duration-200"
+            >
+                cancel
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Compare Row Selection Modal -->
 <div id="compareSelectionModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
     <div class="bg-[#2a2a2a] rounded-lg max-w-lg w-full p-6 border border-gray-800">

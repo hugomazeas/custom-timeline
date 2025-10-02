@@ -2,231 +2,139 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TimelineGroup;
-use App\Models\TimelineRow;
-use App\Models\Event;
-use Illuminate\Http\Request;
+use App\Http\Requests\CreateEventRequest;
+use App\Http\Requests\CreateTimelineGroupRequest;
+use App\Http\Requests\CreateTimelineRowRequest;
+use App\Http\Requests\MoveRowRequest;
+use App\Http\Requests\UpdateEventRequest;
+use App\Http\Resources\EventResource;
+use App\Http\Resources\TimelineGroupResource;
+use App\Services\TimelineService;
 
 class TimelineController extends Controller
 {
+    public function __construct(
+        private readonly TimelineService $timelineService
+    ) {}
+
     public function getGroups()
     {
-        $groups = TimelineGroup::with(['timelineRows.events'])->get();
+        $groups = $this->timelineService->getAllGroups();
 
-        $formattedGroups = $groups->map(function ($group) {
-            return [
-                'id' => $group->id,
-                'name' => $group->name,
-                'created_at' => $group->created_at->toISOString(),
-                'rows' => $group->timelineRows->map(function ($row) {
-                    return [
-                        'id' => $row->id,
-                        'name' => $row->name,
-                        'events' => $row->events->map(function ($event) {
-                            return [
-                                'id' => $event->id,
-                                'title' => $event->title,
-                                'type' => $event->type,
-                                'start' => $event->start_date->toISOString(),
-                                'end' => $event->end_date?->toISOString(),
-                                'color' => $event->color,
-                                'is_deadline' => $event->is_deadline,
-                                'notes' => $event->notes,
-                                'links' => $event->links,
-                                'created_at' => $event->created_at->toISOString()
-                            ];
-                        })->toArray()
-                    ];
-                })->toArray()
-            ];
-        });
-
-        return response()->json(['groups' => $formattedGroups]);
+        return response()->json([
+            'groups' => TimelineGroupResource::collection($groups),
+        ]);
     }
 
-    public function createGroup(Request $request)
+    public function createGroup(CreateTimelineGroupRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $group = $this->timelineService->createGroup($request->validated('name'));
 
-        $group = TimelineGroup::create([
-            'name' => $request->input('name'),
-        ]);
-
-        $row = $group->timelineRows()->create([
-            'name' => 'Row 1',
-        ]);
-
-        $formattedGroup = [
-            'id' => $group->id,
-            'name' => $group->name,
-            'created_at' => $group->created_at->toISOString(),
-            'rows' => [
-                [
-                    'id' => $row->id,
-                    'name' => $row->name,
-                    'events' => []
-                ]
-            ]
-        ];
-
-        return response()->json(['group' => $formattedGroup], 201);
+        return response()->json([
+            'group' => new TimelineGroupResource($group),
+        ], 201);
     }
 
     public function deleteGroup(string $id)
     {
-        $group = TimelineGroup::find($id);
+        $deleted = $this->timelineService->deleteGroup((int) $id);
 
-        if (!$group) {
+        if (! $deleted) {
             return response()->json(['error' => 'Group not found'], 404);
         }
-
-        $group->delete();
 
         return response()->json(['success' => true]);
     }
 
-    public function createRow(Request $request)
+    public function createRow(CreateTimelineRowRequest $request)
     {
-        $request->validate([
-            'group_id' => 'required|integer',
-            'name' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
 
-        $group = TimelineGroup::find($request->input('group_id'));
+        $row = $this->timelineService->createRow(
+            $validated['group_id'],
+            $validated['name']
+        );
 
-        if (!$group) {
+        if (! $row) {
             return response()->json(['error' => 'Group not found'], 404);
         }
 
-        $row = $group->timelineRows()->create([
-            'name' => $request->input('name'),
-        ]);
-
-        $formattedRow = [
-            'id' => $row->id,
-            'name' => $row->name,
-            'events' => []
-        ];
-
-        return response()->json(['row' => $formattedRow], 201);
+        return response()->json([
+            'row' => [
+                'id' => $row->id,
+                'name' => $row->name,
+                'events' => [],
+            ],
+        ], 201);
     }
 
     public function deleteRow(string $id)
     {
-        $row = TimelineRow::find($id);
+        $deleted = $this->timelineService->deleteRow((int) $id);
 
-        if (!$row) {
+        if (! $deleted) {
             return response()->json(['error' => 'Row not found'], 404);
         }
-
-        $row->delete();
 
         return response()->json(['success' => true]);
     }
 
-    public function createEvent(Request $request)
+    public function moveRow(MoveRowRequest $request, string $id)
     {
-        $request->validate([
-            'group_id' => 'required|integer',
-            'row_id' => 'required|integer',
-            'title' => 'required|string|max:255',
-            'start' => 'required|date',
-            'end' => 'nullable|date',
-            'color' => 'required|string',
-            'is_deadline' => 'nullable|boolean',
-            'notes' => 'nullable|string',
-            'links' => 'nullable|string'
-        ]);
+        $validated = $request->validated();
 
-        $row = TimelineRow::find($request->input('row_id'));
+        $row = $this->timelineService->moveRow(
+            (int) $id,
+            $validated['target_group_id']
+        );
 
-        if (!$row) {
+        if (! $row) {
+            return response()->json(['error' => 'Row or target group not found'], 404);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function createEvent(CreateEventRequest $request)
+    {
+        $validated = $request->validated();
+
+        $event = $this->timelineService->createEvent(
+            $validated['row_id'],
+            $validated
+        );
+
+        if (! $event) {
             return response()->json(['error' => 'Row not found'], 404);
         }
 
-        $event = $row->events()->create([
-            'title' => $request->input('title'),
-            'start_date' => $request->input('start'),
-            'end_date' => $request->input('end'),
-            'color' => $request->input('color'),
-            'is_deadline' => $request->input('is_deadline', false),
-            'notes' => $request->input('notes'),
-            'links' => $request->input('links'),
-        ]);
-
-        $formattedEvent = [
-            'id' => $event->id,
-            'title' => $event->title,
-            'type' => $event->type,
-            'start' => $event->start_date->toISOString(),
-            'end' => $event->end_date?->toISOString(),
-            'color' => $event->color,
-            'is_deadline' => $event->is_deadline,
-            'notes' => $event->notes,
-            'links' => $event->links,
-            'created_at' => $event->created_at->toISOString()
-        ];
-
-        return response()->json(['event' => $formattedEvent], 201);
+        return response()->json([
+            'event' => new EventResource($event),
+        ], 201);
     }
 
-    public function updateEvent(Request $request, string $id)
+    public function updateEvent(UpdateEventRequest $request, string $id)
     {
-        $request->validate([
-            'group_id' => 'required|integer',
-            'row_id' => 'required|integer',
-            'title' => 'required|string|max:255',
-            'start' => 'required|date',
-            'end' => 'nullable|date',
-            'color' => 'required|string',
-            'is_deadline' => 'nullable|boolean',
-            'notes' => 'nullable|string',
-            'links' => 'nullable|string'
-        ]);
+        $validated = $request->validated();
 
-        $event = Event::find($id);
+        $event = $this->timelineService->updateEvent((int) $id, $validated);
 
-        if (!$event) {
+        if (! $event) {
             return response()->json(['error' => 'Event not found'], 404);
         }
 
-        $event->update([
-            'title' => $request->input('title'),
-            'start_date' => $request->input('start'),
-            'end_date' => $request->input('end'),
-            'color' => $request->input('color'),
-            'is_deadline' => $request->input('is_deadline', false),
-            'notes' => $request->input('notes'),
-            'links' => $request->input('links'),
+        return response()->json([
+            'event' => new EventResource($event),
         ]);
-
-        $formattedEvent = [
-            'id' => $event->id,
-            'title' => $event->title,
-            'type' => $event->type,
-            'start' => $event->start_date->toISOString(),
-            'end' => $event->end_date?->toISOString(),
-            'color' => $event->color,
-            'is_deadline' => $event->is_deadline,
-            'notes' => $event->notes,
-            'links' => $event->links,
-            'created_at' => $event->created_at->toISOString()
-        ];
-
-        return response()->json(['event' => $formattedEvent]);
     }
 
     public function deleteEvent(string $id)
     {
-        $event = Event::find($id);
+        $deleted = $this->timelineService->deleteEvent((int) $id);
 
-        if (!$event) {
+        if (! $deleted) {
             return response()->json(['error' => 'Event not found'], 404);
         }
-
-        $event->delete();
 
         return response()->json(['success' => true]);
     }
